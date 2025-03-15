@@ -1,0 +1,72 @@
+/* dashboardStyles.css */
+
+/* Import the fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@100..900&family=Inter:wght@100..900&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif; /* Default font for the body */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Exo', sans-serif; /* Exo font for all headings */
+}
+
+.card {
+  border-radius: 15px; /* Added border-radius */
+  position: relative;
+  overflow: hidden;
+}
+
+.advisory-card {
+  background: linear-gradient(#3A6B3E, #2c5264);
+}
+
+.product-card {
+  background: linear-gradient(#BBCD79, #8ab827);
+}
+
+.pending-card {
+  background: linear-gradient(#f1c40f, #f39c12);
+}
+
+.confirm-card {
+  background: linear-gradient(#2ecc71, #28b463);
+}
+
+.cancel-card {
+  background: linear-gradient(#e74c3c, #c0392b);
+}
+
+.revenue-card {
+  background: linear-gradient(#F39C12, #f8b400);
+}
+
+.pending-revenue-card {
+  background: linear-gradient(#2980B9, #00A4E4);
+}
+
+.confirm-revenue-card {
+  background: linear-gradient(#27AE60, #4CAF50);
+}
+
+.cancel-revenue-card {
+  background: linear-gradient(#C0392B, #E74C3C);
+}
+
+.card-title {
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-family: 'Exo', sans-serif; /* Exo font for card titles */
+}
+
+.card-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-family: 'Exo', sans-serif; /* Exo font for card counts */
+}
+
+/* Additional styles for responsive headings */
+.text-muted {
+  font-family: 'Inter', sans-serif; /* Applying Inter font */
+}

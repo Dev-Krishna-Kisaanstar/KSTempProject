@@ -1,0 +1,57 @@
+/* Calendar.css */
+.calendar-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fc {
+    /* FullCalendar root */
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.5em;
+    font-weight: 500;
+}
+
+.fc .fc-button {
+    background-color: #BBCD79;
+    border: none;
+}
+
+.fc .fc-button:hover {
+    background-color: #9bac58;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: #808c47;
+}
+
+.fc-event {
+    background-color: #BBCD79;
+    border: 1px solid #9bac58;
+    cursor: pointer;
+}
+
+.fc-event:hover {
+    background-color: #9bac58;
+}
+
+.event-content {
+    font-size: 0.85em;
+    padding: 2px;
+}
+
+.fc td {
+    border: 1px solid #ddd;
+}
+
+.fc th {
+    background-color: #f5f5f5;
+    padding: 10px 0;
+}

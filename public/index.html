@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./Kisaan.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#6C584C" />
+    <meta name="description" content="Cultivating Growth Harvesting Success" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>KisaanStar</title>
+
+    <style>
+        body {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Non-prefixed version */
+        }
+    </style>
+
+    <script>
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        // Disable specific keys related to developer tools and page source
+        document.addEventListener('keydown', function (e) {
+            const isCtrlCmd = e.ctrlKey || e.metaKey; // Allow Mac users to use the Command key
+
+            // Block F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U and Ctrl+Shift+U
+            if (e.key === 'F12' || 
+                (isCtrlCmd && (
+                    e.key === 'I' || 
+                    e.key === 'C' || 
+                    e.key === 'U' || 
+                    e.key === 'u' ||  // lowercase 'u'
+                    (e.shiftKey && e.key === 'F12'))
+                )) 
+            {
+                e.preventDefault();
+            }
+
+            // Prevent Print Screen
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent dragging of elements
+        document.addEventListener("dragstart", function (event) {
+            event.preventDefault();
+        });
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+</html>
