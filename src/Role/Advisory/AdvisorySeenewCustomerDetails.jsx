@@ -222,6 +222,18 @@ const AdvisorySeenewCustomerDetails = () => {
     );
   }
 
+  const areAddressFieldsFilled = () => {
+    return (
+      updatedCustomer.village &&
+      updatedCustomer.nearbyLocation &&
+      updatedCustomer.pincode &&
+      updatedCustomer.postOffice &&
+      updatedCustomer.taluka &&
+      updatedCustomer.district &&
+      updatedCustomer.state
+    );
+  };
+
   return (
     <Sidebar>
       <Container>
@@ -356,7 +368,11 @@ const AdvisorySeenewCustomerDetails = () => {
                 <AdvisoryAddCustomerRemark customerId={customer._id} advisoryId={advisoryId} />
               )}
               {activeComponent === "placeOrder" && (
-                <PlaceOrder customerId={customer._id} advisorId={advisoryId} />
+               <PlaceOrder 
+               customerId={customer._id} 
+               advisorId={advisoryId}
+               isAddressFilled={areAddressFieldsFilled()} // Pass the filled address status
+             />
               )}
               {activeComponent === "oldOrder" && (
                 <AdvisorySeeCustomerOldOrders customerId={customer._id} />

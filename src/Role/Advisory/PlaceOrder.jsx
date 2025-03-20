@@ -14,8 +14,9 @@ import { useNavigate } from "react-router-dom";
 import ApiLoader from '../../components/ApiLoader/ApiLoader';
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { useParams } from "react-router-dom";
 
-const PlaceOrder = ({ customerId, advisorId }) => {
+const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
   const [products, setProducts] = useState([{ productId: "", quantity: 1, price: 0 }]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -24,6 +25,7 @@ const PlaceOrder = ({ customerId, advisorId }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+   const { mobileNumber } = useParams();
   
   const navigate = useNavigate();
 
@@ -91,6 +93,7 @@ const PlaceOrder = ({ customerId, advisorId }) => {
   };
 
   const handleSubmit = async () => {
+    // Check for empty products
     const hasEmptyProduct = products.some((product) => product.productId.trim() === "");
     if (hasEmptyProduct) {
       setError("Please select all products.");
@@ -98,28 +101,52 @@ const PlaceOrder = ({ customerId, advisorId }) => {
       toast.error("Please select all products.");
       return;
     }
-
+  
     if (products.length === 0) {
       console.error("No products to place order");
       return;
     }
-
-    setSubmitting(true);
+  
+    // First, check if the address is filled
     try {
-      const orderProducts = products.map((product) => ({
-        productId: product.productId,
-        quantity: product.quantity,
-        amount: product.price,
-      }));
-
-      const dataToSend = {
-        customerId,
-        advisorId,
-        products: orderProducts,
-        discount,
-        totalAmount,
-      };
-
+      setSubmitting(true);
+      
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/advisory/customers/${mobileNumber}`);
+      const { village, taluka, district, state, pincode, nearbyLocation, postOffice } = response.data;
+  
+      const isAddressFilled = village && taluka && district && state && pincode && postOffice;
+  
+      if (!isAddressFilled) {
+        toast.error("Address is required. Please enter and save the address.");
+        setError("Address is required. Please enter and save the address.");
+        setSnackbarOpen(true);
+        setSubmitting(false);
+        return;
+      }
+  
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      toast.error("Error fetching address details.");
+      setSubmitting(false);
+      return;
+    }
+  
+    // Proceed to place the order
+    const orderProducts = products.map((product) => ({
+      productId: product.productId,
+      quantity: product.quantity,
+      amount: product.price,
+    }));
+  
+    const dataToSend = {
+      customerId,
+      advisorId,
+      products: orderProducts,
+      discount,
+      totalAmount,
+    };
+  
+    try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/advisory/place-order`, dataToSend);
       console.log("Order placed:", response.data);
       toast.success("Order placed successfully!");
@@ -219,22 +246,22 @@ const PlaceOrder = ({ customerId, advisorId }) => {
         Total Amount: ₹ {totalAmount.toFixed(2)}
       </Typography>
       <Button
-        variant="contained"
-        sx={{
-          backgroundColor: '#6C584C',
-          borderRadius: 20,
-          "&:hover": { backgroundColor: "#DDE5B6", color: 'black' },
-          color: 'white',
-          padding: '10px 20px',
-          fontWeight: 'bold',
-        }}
-        fullWidth
-        className="mb-4"
-        onClick={handleSubmit}
-        disabled={submitting}
-      >
-        {submitting ? "Placing Order..." : "Place Order"}
-      </Button>
+  variant="contained"
+  sx={{
+    backgroundColor: '#6C584C',
+    borderRadius: 20,
+    "&:hover": { backgroundColor: "#DDE5B6", color: 'black' },
+    color: 'white',
+    padding: '10px 20px',
+    fontWeight: 'bold',
+  }}
+  fullWidth
+  className="mb-4"
+  onClick={handleSubmit}
+  disabled={submitting || !isAddressFilled} // Use the prop to determine button enable state
+>
+  {submitting ? "Placing Order..." : "Place Order"}
+</Button>
 
       <Snackbar
         open={snackbarOpen}

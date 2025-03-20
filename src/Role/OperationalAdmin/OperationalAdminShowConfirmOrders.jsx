@@ -27,6 +27,21 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ApiLoader from '../../components/ApiLoader/ApiLoader';
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { styled } from '@mui/material/styles';
+
+// Styled components for improved UI
+const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
+    backgroundColor: 'green', // Green background for header
+    color: '#ffffff',          // White text for header
+    fontWeight: 'bold',
+    textAlign: 'center',
+}));
+
+const StyledTableCellBody = styled(TableCell)(({ theme }) => ({
+    backgroundColor: '#ffffff', // White background for body cells
+    color: '#000000',            // Black text for body cells
+    textAlign: 'center',
+}));
 
 const OperationalAdminShowConfirmOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -44,10 +59,10 @@ const OperationalAdminShowConfirmOrders = () => {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/advisory/orders`);
                 const confirmedOrders = response.data.filter(order => order.orderStatus === 'Confirm');
                 setOrders(confirmedOrders);
-                toast.success("Orders loaded successfully!"); // Notify user on successful load
+                toast.success("Orders loaded successfully!");
             } catch (err) {
                 setError(err.message);
-                toast.error("Failed to load orders: " + err.message); // Notify user on error
+                toast.error("Failed to load orders: " + err.message);
             } finally {
                 setLoading(false);
             }
@@ -79,12 +94,11 @@ const OperationalAdminShowConfirmOrders = () => {
 
         setSelectedDateOrders(filteredOrders);
         if (filteredOrders.length > 0) {
-            toast.info(`Found ${filteredOrders.length} orders on ${new Date(dateString).toLocaleDateString()}`); // Notify user of orders found
+            toast.info(`Found ${filteredOrders.length} orders on ${new Date(dateString).toLocaleDateString()}`);
         } else {
-            toast.warning(`No orders found on ${new Date(dateString).toLocaleDateString()}`); // Notify user of no orders found
+            toast.warning(`No orders found on ${new Date(dateString).toLocaleDateString()}`);
         }
 
-        // Hide the calendar after selecting a date
         setShowCalendar(false);
     };
 
@@ -101,21 +115,21 @@ const OperationalAdminShowConfirmOrders = () => {
             'District': order.customerId?.district || 'N/A',
             'Pincode': order.customerId?.pincode || 'N/A',
             'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-            'Post Office': order.customerId?.postOffice || 'N/A', // Added Post Office field
+            'Post Office': order.customerId?.postOffice || 'N/A',
             'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
             'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
             'Final Amount': order.totalAmount,
             'Order Status': order.orderStatus,
         }));
-    
+
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-    
+
         XLSX.writeFile(workbook, `ConfirmedOrders.xlsx`);
         handleClose();
     };
-    
+
     const csvData = selectedDateOrders.map(order => ({
         'Order Number': order._id,
         'Created At': new Date(order.createdAt).toLocaleString(),
@@ -128,13 +142,13 @@ const OperationalAdminShowConfirmOrders = () => {
         'District': order.customerId?.district || 'N/A',
         'Pincode': order.customerId?.pincode || 'N/A',
         'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-        'Post Office': order.customerId?.postOffice || 'N/A', // Added Post Office field
+        'Post Office': order.customerId?.postOffice || 'N/A',
         'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
         'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
         'Final Amount': order.totalAmount,
         'Order Status': order.orderStatus,
     }));
-    
+
     const exportToPDF = () => {
         const doc = new jsPDF({
             orientation: 'landscape',
@@ -143,7 +157,7 @@ const OperationalAdminShowConfirmOrders = () => {
             putOnlyUsedFonts: true,
             floatPrecision: 16 // or "smart", default is 16
         });
-    
+
         const rows = selectedDateOrders.map(order => [
             order._id,
             new Date(order.createdAt).toLocaleString(),
@@ -156,13 +170,13 @@ const OperationalAdminShowConfirmOrders = () => {
             order.customerId?.district || 'N/A',
             order.customerId?.pincode || 'N/A',
             order.customerId?.nearbyLocation || 'N/A',
-            order.customerId?.postOffice || 'N/A', // Added Post Office field
+            order.customerId?.postOffice || 'N/A',
             order.products.map(product => product.productId?.name || 'N/A').join(', '),
             order.products.reduce((acc, product) => acc + product.quantity, 0),
             order.totalAmount,
             order.orderStatus,
         ]);
-    
+
         doc.autoTable({
             head: [['Order Number', 'Created At', 'Advisor Name', 'Mobile Number', 'Farmer Alt. Number',
                     'Farmer Name', 'Village', 'Taluka', 'District', 'Pincode',
@@ -170,7 +184,7 @@ const OperationalAdminShowConfirmOrders = () => {
             body: rows,
             margin: { top: 20, left: 20, right: 20, bottom: 20 },
         });
-    
+
         doc.save('ConfirmedOrders.pdf');
         handleClose();
     };
@@ -199,145 +213,145 @@ const OperationalAdminShowConfirmOrders = () => {
 
     return (
         <Sidebar>
-    <ToastContainer /> {/* Include ToastContainer */}
-    <Box m={3}>
-        <Typography variant="h4" gutterBottom>
-            Confirmed Orders
-        </Typography>
+            <ToastContainer /> {/* Include ToastContainer */}
+            <Box m={3}>
+                <Typography variant="h4" gutterBottom>
+                    Confirmed Orders
+                </Typography>
 
-        <Button
-            variant="contained"
-            onClick={() => setShowCalendar(prev => !prev)}
-            sx={{ mb: 2 }}
-            startIcon={<CalendarTodayIcon />}
-        >
-            {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
-        </Button>
-
-        <Button
-            variant="contained"
-            onClick={handleExportClick}
-            sx={{
-                mb: 2,
-                ml: 2,
-                backgroundColor: '#6C584C', // Background color for the button
-                color: 'white', // Default text color
-                '&:hover': {
-                    backgroundColor: '#DDE5B6', // Hover color
-                    color: 'black', // Text color on hover
-                },
-            }}
-            startIcon={<DownloadIcon />}
-        >
-            Export
-        </Button>
-
-        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-            <MenuItem onClick={exportToExcel}>Export to Excel</MenuItem>
-            <CSVLink data={csvData} filename={"ConfirmedOrders.csv"} style={{ textDecoration: 'none' }}>
-                <MenuItem onClick={handleClose}>Export to CSV</MenuItem>
-            </CSVLink>
-            <MenuItem onClick={exportToPDF}>Export to PDF</MenuItem>
-        </Menu>
-
-        {showCalendar && (
-            <Box
-                className="calendar-container"
-                sx={{
-                    mb: 4,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                }}
-            >
-                <Box
-                    sx={{
-                        width: '40%',
-                        maxWidth: '850px',
-                        height: '550px',
-                        border: '1px solid #ddd',
-                        borderRadius: '5px',
-                        boxShadow: 2,
-                    }}
+                <Button
+                    variant="contained"
+                    onClick={() => setShowCalendar(prev => !prev)}
+                    sx={{ mb: 2 }}
+                    startIcon={<CalendarTodayIcon />}
                 >
-                    <FullCalendar
-                        plugins={[dayGridPlugin, interactionPlugin]}
-                        events={[]} // Ensuring no events are passed, so dates will be blank
-                        dateClick={handleDateClick}
-                        eventRender={info => { // Do nothing on event render if you want to keep the days empty
-                            info.el.innerHTML = ''; // Typically used to prevent rendering
+                    {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
+                </Button>
+
+                <Button
+                    variant="contained"
+                    onClick={handleExportClick}
+                    sx={{
+                        mb: 2,
+                        ml: 2,
+                        backgroundColor: '#6C584C', // Background color for the button
+                        color: 'white', // Default text color
+                        '&:hover': {
+                            backgroundColor: '#DDE5B6', // Hover color
+                            color: 'black', // Text color on hover
+                        },
+                    }}
+                    startIcon={<DownloadIcon />}
+                >
+                    Export
+                </Button>
+
+                <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+                    <MenuItem onClick={exportToExcel}>Export to Excel</MenuItem>
+                    <CSVLink data={csvData} filename={"ConfirmedOrders.csv"} style={{ textDecoration: 'none' }}>
+                        <MenuItem onClick={handleClose}>Export to CSV</MenuItem>
+                    </CSVLink>
+                    <MenuItem onClick={exportToPDF}>Export to PDF</MenuItem>
+                </Menu>
+
+                {showCalendar && (
+                    <Box
+                        className="calendar-container"
+                        sx={{
+                            mb: 4,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
                         }}
-                    />
+                    >
+                        <Box
+                            sx={{
+                                width: '40%',
+                                maxWidth: '850px',
+                                height: '550px',
+                                border: '1px solid #ddd',
+                                borderRadius: '5px',
+                                boxShadow: 2,
+                            }}
+                        >
+                            <FullCalendar
+                                plugins={[dayGridPlugin, interactionPlugin]}
+                                events={[]} // Ensuring no events are passed, so dates will be blank
+                                dateClick={handleDateClick}
+                                eventRender={info => {
+                                    info.el.innerHTML = ''; // Typically used to prevent rendering
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                )}
+
+                <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <StyledTableCellHeader>Order Number</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Created At</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Advisor Name</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Mobile Number</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Farmer Alt. Number</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Farmer Name</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Village</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Taluka</StyledTableCellHeader>
+                                    <StyledTableCellHeader>District</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Pincode</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Nearby Location</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Post Office</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Product Names</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Total Quantity</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Final Amount</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Order Status</StyledTableCellHeader>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {selectedDateOrders.length > 0 ? (
+                                    selectedDateOrders.map((order) => (
+                                        <TableRow key={order._id}>
+                                            <StyledTableCellBody>{order._id}</StyledTableCellBody>
+                                            <StyledTableCellBody>{new Date(order.createdAt).toLocaleString()}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.advisorId?.name || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.mobileNumber || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.alternativeNumber || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.name || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.village || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.taluka || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.district || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.pincode || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.nearbyLocation || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.customerId?.postOffice || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>
+                                                <ul style={{ padding: 0, margin: 0 }}>
+                                                    {order.products.map((product) => (
+                                                        <li key={product.productId?._id}>
+                                                            {product.productId?.name || 'N/A'}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </StyledTableCellBody>
+                                            <StyledTableCellBody>{order.products.reduce((acc, product) => acc + product.quantity, 0)}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.totalAmount}</StyledTableCellBody>
+                                            <StyledTableCellBody>{order.orderStatus}</StyledTableCellBody>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={16} align="center" className="text-muted">
+                                            {selectedDate ? `No orders on ${new Date(selectedDate).toLocaleDateString()}` : 'Select a date to view orders.'}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </Box>
             </Box>
-        )}
-
-        <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}> {/* Added box for scrollable table */}
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Order Number</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Created At</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Advisor Name</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Mobile Number</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Farmer Alt. Number</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Farmer Name</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Village</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Taluka</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>District</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Pincode</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Nearby Location</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Post Office</TableCell> {/* Added Post Office header */}
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Product Names</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Total Quantity</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Final Amount</TableCell>
-                            <TableCell sx={{ backgroundColor: "#BBCD79", fontWeight: "bold", textAlign: "center" }}>Order Status</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {selectedDateOrders.length > 0 ? (
-                            selectedDateOrders.map((order) => (
-                                <TableRow key={order._id}>
-                                    <TableCell>{order._id}</TableCell>
-                                    <TableCell>{new Date(order.createdAt).toLocaleString()}</TableCell>
-                                    <TableCell>{order.advisorId?.name || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.mobileNumber || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.alternativeNumber || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.name || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.village || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.taluka || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.district || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.pincode || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.nearbyLocation || 'N/A'}</TableCell>
-                                    <TableCell>{order.customerId?.postOffice || 'N/A'}</TableCell> {/* Added Post Office field */}
-                                    <TableCell>
-                                        <ul style={{ padding: 0, margin: 0 }}>
-                                            {order.products.map((product) => (
-                                                <li key={product.productId?._id}>
-                                                    {product.productId?.name || 'N/A'}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </TableCell>
-                                    <TableCell>{order.products.reduce((acc, product) => acc + product.quantity, 0)}</TableCell>
-                                    <TableCell>{order.totalAmount}</TableCell>
-                                    <TableCell>{order.orderStatus}</TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={16} align="center" className="text-muted">
-                                    {selectedDate ? `No orders on ${new Date(selectedDate).toLocaleDateString()}` : 'Select a date to view orders.'}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
-    </Box>
-</Sidebar>
+        </Sidebar>
     );
 };
 
