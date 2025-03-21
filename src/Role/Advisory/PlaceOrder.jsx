@@ -16,16 +16,16 @@ import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { useParams } from "react-router-dom";
 
-const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
+const PlaceOrder = ({ customerId, advisorId, isAddressFilled }) => {
   const [products, setProducts] = useState([{ productId: "", quantity: 1, price: 0 }]);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [discount, setDiscount] = useState(0);
+  const [discount, setDiscount] = useState(""); // Initialize as an empty string
   const [productOptions, setProductOptions] = useState([]);
   const [error, setError] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-   const { mobileNumber } = useParams();
+  const { mobileNumber } = useParams();
   
   const navigate = useNavigate();
 
@@ -87,13 +87,13 @@ const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
   };
 
   const handleDiscountChange = (value) => {
-    const validDiscount = value < 0 ? 0 : Number(value) || 0;
+    // Update to handle empty input as well
+    const validDiscount = value < 0 ? 0 : (value === "" ? "" : Number(value));
     setDiscount(validDiscount);
     calculateTotalAmount(products, validDiscount); // Recalculate total amount when discount changes
   };
 
   const handleSubmit = async () => {
-    // Check for empty products
     const hasEmptyProduct = products.some((product) => product.productId.trim() === "");
     if (hasEmptyProduct) {
       setError("Please select all products.");
@@ -107,7 +107,7 @@ const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
       return;
     }
   
-    // First, check if the address is filled
+    // Address check
     try {
       setSubmitting(true);
       
@@ -131,7 +131,7 @@ const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
       return;
     }
   
-    // Proceed to place the order
+    // Place order
     const orderProducts = products.map((product) => ({
       productId: product.productId,
       quantity: product.quantity,
@@ -236,8 +236,8 @@ const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
       <TextField
         label="Discount"
         type="number"
-        value={discount}
-        onChange={(e) => handleDiscountChange(Number(e.target.value) || 0)}
+        value={discount} // This will now properly show as an empty field when discount is ""
+        onChange={(e) => handleDiscountChange(e.target.value)} // Change handler captures the entire value
         fullWidth
         variant="outlined"
         className="mb-3"
@@ -246,22 +246,22 @@ const PlaceOrder = ({ customerId, advisorId,isAddressFilled  }) => {
         Total Amount: ₹ {totalAmount.toFixed(2)}
       </Typography>
       <Button
-  variant="contained"
-  sx={{
-    backgroundColor: '#6C584C',
-    borderRadius: 20,
-    "&:hover": { backgroundColor: "#DDE5B6", color: 'black' },
-    color: 'white',
-    padding: '10px 20px',
-    fontWeight: 'bold',
-  }}
-  fullWidth
-  className="mb-4"
-  onClick={handleSubmit}
-  disabled={submitting || !isAddressFilled} // Use the prop to determine button enable state
->
-  {submitting ? "Placing Order..." : "Place Order"}
-</Button>
+        variant="contained"
+        sx={{
+          backgroundColor: '#6C584C',
+          borderRadius: 20,
+          "&:hover": { backgroundColor: "#DDE5B6", color: 'black' },
+          color: 'white',
+          padding: '10px 20px',
+          fontWeight: 'bold',
+        }}
+        fullWidth
+        className="mb-4"
+        onClick={handleSubmit}
+        disabled={submitting || !isAddressFilled} // Button enable state based on address
+      >
+        {submitting ? "Placing Order..." : "Place Order"}
+      </Button>
 
       <Snackbar
         open={snackbarOpen}

@@ -381,103 +381,114 @@ const OperationalAdminSeeOrders = () => {
                     </Box>
                 )}
 
-                <TableStyledContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-                    <div ref={headerRef}>
-                        <Table sx={{ minWidth: 2000, tableLayout: 'fixed', borderCollapse: 'collapse' }} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    {[
-                                        "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
-                                        "Farmer Alt. Number", "Farmer Name", "Village", "Taluka", 
-                                        "District", "Pincode", "Nearby Location", "Post Office",
-                                        "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
-                                        "Order Status"
-                                    ].map((header) => (
-                                        <StyledTableCellHeader key={header}>
-                                            {header}
-                                        </StyledTableCellHeader>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {selectedDateOrders.length === 0 ? (
-                                    <TableRow>
-                                        <StyledTableCellBody colSpan={18} align="center" sx={{ padding: '20px', border: '1px solid #e0e0e0' }}>
-                                            No {filterStatus || 'orders'} found
-                                        </StyledTableCellBody>
-                                    </TableRow>
-                                ) : (
-                                    selectedDateOrders.map(order => (
-                                        <StyledTableRow key={order._id} hover>
-                                            <StyledTableCellBody>
-                                                {order._id?.substring(0, 10)}...
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {new Date(order.createdAt).toLocaleString()}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.advisorId?.name || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.mobileNumber || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.alternativeNumber || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.name || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.village || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.taluka || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.district || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.pincode || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.nearbyLocation || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.customerId?.postOffice || 'N/A'}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.products?.map(product => product.productId?.name || 'N/A').join(', ')}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.products?.reduce((acc, product) => acc + product.quantity, 0) || 0}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.totalAmount || 0}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {order.discount || 0}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                {(order.totalAmount - (order.discount || 0)).toFixed(2)}
-                                            </StyledTableCellBody>
-                                            <StyledTableCellBody>
-                                                <Select
-                                                    value={order.orderStatus || ''}
-                                                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                                    displayEmpty
-                                                >
-                                                    <MenuItem value="Pending">Pending</MenuItem>
-                                                    <MenuItem value="Confirm">Confirm</MenuItem>
-                                                    <MenuItem value="Cancel">Cancel</MenuItem>
-                                                </Select>
-                                            </StyledTableCellBody>
-                                        </StyledTableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TableStyledContainer>
+<TableStyledContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+    <div ref={headerRef}>
+        <Table sx={{ minWidth: 2000, tableLayout: 'fixed', borderCollapse: 'collapse' }} aria-label="simple table">
+            <TableHead>
+                <TableRow>
+                    {[
+                        "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
+                        "Farmer Alt. Number", "Farmer Name", "Village", "Taluka", 
+                        "District", "Pincode", "Nearby Location", "Post Office",
+                        "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
+                        "Order Status"
+                    ].map((header) => (
+                        <StyledTableCellHeader key={header}>
+                            {header}
+                        </StyledTableCellHeader>
+                    ))}
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {selectedDateOrders.length === 0 ? (
+                    <TableRow>
+                        <StyledTableCellBody colSpan={18} align="center" sx={{ padding: '20px', border: '1px solid #e0e0e0' }}>
+                            No {filterStatus || 'orders'} found
+                        </StyledTableCellBody>
+                    </TableRow>
+                ) : (
+                    selectedDateOrders.map(order => {
+                        // Calculate Total Amount based on products
+                        const totalAmount = order.products.reduce((acc, product) => 
+                            acc + (product.productId?.price || 0) * product.quantity, 0
+                        );
+
+                        const finalAmount = totalAmount - (order.discount || 0);
+
+                        return (
+                            <StyledTableRow key={order._id} hover>
+                                <StyledTableCellBody>
+                                    {order._id?.substring(0, 10)}...
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {new Date(order.createdAt).toLocaleString()}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.advisorId?.name || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.mobileNumber || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.alternativeNumber || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.name || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.village || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.taluka || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.district || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.pincode || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.nearbyLocation || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.customerId?.postOffice || 'N/A'}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.products?.map(product => product.productId?.name || 'N/A').join(', ')}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.products?.reduce((acc, product) => acc + product.quantity, 0) || 0}
+                                </StyledTableCellBody>
+                                {/* Total Amount now reflects the calculation based on the product price and quantity */}
+                                <StyledTableCellBody>
+                                    {totalAmount.toFixed(2)}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    {order.discount || 0}
+                                </StyledTableCellBody>
+                                {/* Final Amount now reflects the calculated final amount */}
+                                <StyledTableCellBody>
+                                    {finalAmount.toFixed(2)}
+                                </StyledTableCellBody>
+                                <StyledTableCellBody>
+                                    <Select
+                                        value={order.orderStatus || ''}
+                                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="Pending">Pending</MenuItem>
+                                        <MenuItem value="Confirm">Confirm</MenuItem>
+                                        <MenuItem value="Cancel">Cancel</MenuItem>
+                                    </Select>
+                                </StyledTableCellBody>
+                            </StyledTableRow>
+                        );
+                    })
+                )}
+            </TableBody>
+        </Table>
+    </div>
+</TableStyledContainer>
             </Box>
         </Sidebar>
     );
