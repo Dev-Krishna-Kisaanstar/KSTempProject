@@ -193,6 +193,15 @@ const AdvisorySeenewCustomerDetails = () => {
   };
 
   const handleSave = async () => {
+    // Check if nearbyLocation is valid
+    const nearbyLocation = updatedCustomer.nearbyLocation || "";
+    
+    // Ensure it has at least one letter and only contains letters
+    if (!/^[a-zA-Z]+$/.test(nearbyLocation)) {
+      toast.error("Nearby location must contain at least one word with letters only.");
+      return; // Prevent saving if the condition is not met
+    }
+  
     await updateCustomerData(updatedCustomer);
     setIsEditable(false);
   };
