@@ -33,34 +33,33 @@ import 'jspdf-autotable';
 
 // Styled components for improved UI
 const StyledTableCellHeader = styled(TableCell)(({ theme }) => ({
-    backgroundColor: 'green', // Green background for header
-    color: '#ffffff',          // White text for header
+    backgroundColor: 'green',
+    color: '#ffffff',
     fontWeight: 'bold',
     textAlign: 'center',
-    padding: '15px',          // Added padding for even spacing
+    padding: '15px',
 }));
 
 const StyledTableCellBody = styled(TableCell)(({ theme }) => ({
-    backgroundColor: '#ffffff', // White background for body cells
-    color: '#000000',            // Black text for body cells
+    backgroundColor: '#ffffff',
+    color: '#000000',
     textAlign: 'center',
-    padding: '10px',            // Added padding for even spacing
+    padding: '10px',
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
-        backgroundColor: '#f5f5f5', // Light gray background for odd rows
+        backgroundColor: '#f5f5f5',
     },
     '&:hover': {
-        backgroundColor: 'lightgreen', // Light green on hover
+        backgroundColor: 'lightgreen',
     },
 }));
 
 const TableStyledContainer = styled(TableContainer)(({ theme }) => ({
-    backgroundColor: '#ffffff', // White background for the table
-    borderRadius: '8px',        // Rounded corners for a better aesthetic
-    marginBottom: '20px',       // Added margin to the bottom
-    // Removed fixed height to allow the table to expand with content
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    marginBottom: '20px',
 }));
 
 const OperationalAdminSeeOrders = () => {
@@ -77,6 +76,7 @@ const OperationalAdminSeeOrders = () => {
     const headerRef = useRef(null);
     const [headerSticky, setHeaderSticky] = useState(false);
     const [headerZIndex, setHeaderZIndex] = useState(1);
+    const [filteredOrders, setFilteredOrders] = useState([]);
 
     useEffect(() => {
         const fetchOrders = async (date) => {
@@ -105,10 +105,9 @@ const OperationalAdminSeeOrders = () => {
             if (headerRef.current) {
                 const headerPosition = headerRef.current.getBoundingClientRect().top;
 
-                // Check if the header should be sticky
                 if (headerPosition < 0) {
                     setHeaderSticky(true);
-                    setHeaderZIndex(1000); // Increase zIndex when sticky
+                    setHeaderZIndex(1000);
                 } else {
                     setHeaderSticky(false);
                     setHeaderZIndex(1);
@@ -116,7 +115,6 @@ const OperationalAdminSeeOrders = () => {
             }
         };
 
-        // Listen for scroll events
         window.addEventListener('scroll', handleScroll);
         return () => {
             window.removeEventListener('scroll', handleScroll);
@@ -133,6 +131,7 @@ const OperationalAdminSeeOrders = () => {
             );
         });
         setSelectedDateOrders(filteredOrdersByDate);
+        filterOrdersByStatus(filterStatus, filteredOrdersByDate); // Apply status filter immediately
     };
 
     const handleStatusChange = async (orderId, newStatus) => {
@@ -140,7 +139,7 @@ const OperationalAdminSeeOrders = () => {
         try {
             await axios.patch(`${process.env.REACT_APP_API_URL}/api/advisory/orders/${orderId}/status`, { status: newStatus });
             setOrders(prevOrders => prevOrders.map(order => order._id === orderId ? { ...order, orderStatus: newStatus } : order));
-            filterOrdersByDate(selectedDate, orders); // Re-filter orders after status change
+            filterOrdersByDate(selectedDate, orders);
             toast.success("Order status updated successfully!");
         } catch (error) {
             console.error("Failed to update order status:", error);
@@ -151,8 +150,18 @@ const OperationalAdminSeeOrders = () => {
         }
     };
 
+    const filterOrdersByStatus = (status, ordersList) => {
+        const filtered = ordersList.filter(order => (status === '' || order.orderStatus === status));
+        setFilteredOrders(filtered);
+    };
+
+    useEffect(() => {
+        filterOrdersByStatus(filterStatus, selectedDateOrders); // Re-filter orders when status changes
+    }, [filterStatus, selectedDateOrders]);
+
     const handleFilterChange = (event) => {
         setFilterStatus(event.target.value);
+        filterOrdersByStatus(event.target.value, selectedDateOrders); // Apply filter immediately
     };
 
     const calculateRevenue = (orders) => {
@@ -165,140 +174,155 @@ const OperationalAdminSeeOrders = () => {
 
     const handleDateClick = (arg) => {
         const dateString = arg.dateStr;
-        setSelectedDate(dateString); // Update selected date to fetch new orders
+        setSelectedDate(dateString);
+    };
+
+    const calculateOrderAmounts = (order) => {
+        const totalAmount = order.products.reduce((acc, product) => 
+            acc + (product.productId?.price || 0) * product.quantity, 0
+        );
+        const discount = order.discount || 0;
+        const finalAmount = Math.max(0, totalAmount - discount); // ensure final amount doesn't go negative
+    
+        return { totalAmount, discount, finalAmount };
     };
 
     const exportToExcel = () => {
-        const excelData = selectedDateOrders.map(order => ({
-            'Order Number': order._id,
-            'Placed At': new Date(order.createdAt).toLocaleString(),
-            'Advisor Name': order.advisorId?.name || 'N/A',
-            'Mobile Number': order.customerId?.mobileNumber || 'N/A',
-            'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
-            'Farmer Name': order.customerId?.name || 'N/A',
-            'Village': order.customerId?.village || 'N/A',
-            'Taluka': order.customerId?.taluka || 'N/A',
-            'District': order.customerId?.district || 'N/A',
-            'Pincode': order.customerId?.pincode || 'N/A',
-            'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-            'Post Office': order.customerId?.postOffice || 'N/A',
-            'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
-            'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
-            'Total Amount': (order.totalAmount || 0) + (order.discount || 0),
-            'Discount Amount': order.discount || 0,
-            'Final Amount': order.totalAmount - (order.discount || 0),
-            'Order Status': order.orderStatus // Added Order Status to Excel export
-        }));
+        const excelData = filteredOrders.map(order => {
+            const { totalAmount, discount, finalAmount } = calculateOrderAmounts(order);
+            return {
+                'Order Number': order._id,
+                'Placed At': new Date(order.createdAt).toLocaleString(),
+                'Advisor Name': order.advisorId?.name || 'N/A',
+                'Mobile Number': order.customerId?.mobileNumber || 'N/A',
+                'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
+                'Farmer Name': order.customerId?.name || 'N/A',
+                'Village/Post': `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
+                'Taluka': order.customerId?.taluka || 'N/A',
+                'District': order.customerId?.district || 'N/A',
+                'Pincode': order.customerId?.pincode || 'N/A',
+                'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
+                'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
+                'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
+                'Total Amount': totalAmount,
+                'Discount Amount': discount,
+                'Final Amount': finalAmount,
+                'Order Status': order.orderStatus 
+            };
+        });
+        
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
         XLSX.writeFile(workbook, `AllOrders.xlsx`);
     };
 
-    const csvData = selectedDateOrders.map(order => ({
-        'Order Number': order._id,
-        'Placed At': new Date(order.createdAt).toLocaleString(),
-        'Advisor Name': order.advisorId?.name || 'N/A',
-        'Mobile Number': order.customerId?.mobileNumber || 'N/A',
-        'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
-        'Farmer Name': order.customerId?.name || 'N/A',
-        'Village': order.customerId?.village || 'N/A',
-        'Taluka': order.customerId?.taluka || 'N/A',
-        'District': order.customerId?.district || 'N/A',
-        'Pincode': order.customerId?.pincode || 'N/A',
-        'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-        'Post Office': order.customerId?.postOffice || 'N/A',
-        'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
-        'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
-        'Total Amount': (order.totalAmount || 0) + (order.discount || 0),
-        'Discount Amount': order.discount || 0,
-        'Final Amount': order.totalAmount - (order.discount || 0),
-        'Order Status': order.orderStatus,
-    }));
+    const csvData = filteredOrders.map(order => {
+        const { totalAmount, discount, finalAmount } = calculateOrderAmounts(order);
+        return {
+            'Order Number': order._id,
+            'Placed At': new Date(order.createdAt).toLocaleString(),
+            'Advisor Name': order.advisorId?.name || 'N/A',
+            'Mobile Number': order.customerId?.mobileNumber || 'N/A',
+            'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
+            'Farmer Name': order.customerId?.name || 'N/A',
+            'Village/Post': `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
+            'Taluka': order.customerId?.taluka || 'N/A',
+            'District': order.customerId?.district || 'N/A',
+            'Pincode': order.customerId?.pincode || 'N/A',
+            'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
+            'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
+            'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
+            'Total Amount': totalAmount,
+            'Discount Amount': discount,
+            'Final Amount': finalAmount,
+            'Order Status': order.orderStatus,
+        };
+    });
 
     const exportToPDF = () => {
         const pdfDoc = new jsPDF({
             orientation: 'landscape',
             unit: 'pt',
-            format: 'a3', // A3 size for wider table
-            putOnlyUsedFonts: true,
-            floatPrecision: 16
+            format: 'a3',
         });
     
-        const rows = selectedDateOrders.map(order => ([
-            order._id,
-            new Date(order.createdAt).toLocaleString(),
-            order.advisorId?.name || 'N/A',
-            order.customerId?.mobileNumber || 'N/A',
-            order.customerId?.alternativeNumber || 'N/A',
-            order.customerId?.name || 'N/A',
-            order.customerId?.village || 'N/A',
-            order.customerId?.taluka || 'N/A',
-            order.customerId?.district || 'N/A',
-            order.customerId?.pincode || 'N/A',
-            order.customerId?.nearbyLocation || 'N/A',
-            order.customerId?.postOffice || 'N/A',
-            order.products.map(product => product.productId?.name || 'N/A').join(', '),
-            order.products.reduce((acc, product) => acc + product.quantity, 0),
-            (order.totalAmount || 0) + (order.discount || 0),
-            order.discount || 0,
-            (order.totalAmount - (order.discount || 0)).toFixed(2),
-            order.orderStatus || 'N/A' // Ensure Order Status is captured
-        ]));
-    
+        const rows = filteredOrders.map(order => {
+            const { totalAmount, discount, finalAmount } = calculateOrderAmounts(order);
+            return [
+                order._id,
+                new Date(order.createdAt).toLocaleString(),
+                order.advisorId?.name || 'N/A',
+                order.customerId?.mobileNumber || 'N/A',
+                order.customerId?.alternativeNumber || 'N/A',
+                order.customerId?.name || 'N/A',
+                `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
+                order.customerId?.taluka || 'N/A',
+                order.customerId?.district || 'N/A',
+                order.customerId?.pincode || 'N/A',
+                order.customerId?.nearbyLocation || 'N/A',
+                order.products.map(product => product.productId?.name || 'N/A').join(', '),
+                order.products.reduce((acc, product) => acc + product.quantity, 0),
+                totalAmount.toFixed(2),
+                discount,
+                finalAmount.toFixed(2),
+                order.orderStatus || 'N/A'
+            ];
+        });
+
         const tableColumnNames = [
-            'Order Number', 'Placed At', 'Advisor Name', 'Mobile Number',
-            'Farmer Alt. Number', 'Farmer Name', 'Village', 'Taluka',
-            'District', 'Pincode', 'Nearby Location', 'Post Office',
-            'Product Names', 'Total Quantity', 'Final Amount', 'Discount Amount', 'Total Amount', 'Order Status'
+            "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
+            "Farmer Alt. Number", "Farmer Name", "Village/Post", "Taluka", 
+            "District", "Pincode", "Nearby Location",
+            "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
+            "Order Status"
         ];
-    
+
         pdfDoc.autoTable({
             head: [tableColumnNames],
             body: rows,
             styles: {
-                fillColor: [255, 255, 255], // Body fill color
-                textColor: [0, 0, 0], // Body text color
-                fontSize: 8, // Font size for data
-                halign: 'center', // Center align horizontally
-                valign: 'middle', // Middle align vertically
-                cellPadding: 2 // Reduced padding
+                fillColor: [255, 255, 255],
+                textColor: [0, 0, 0],
+                fontSize: 8,
+                halign: 'center',
+                valign: 'middle',
+                cellPadding: 2
             },
             headStyles: {
-                fillColor: [0, 128, 0], 
-                textColor: [255, 255, 255], 
+                fillColor: [0, 128, 0],
+                textColor: [255, 255, 255],
                 fontStyle: 'bold',
-                fontSize: 9 // Font size for header
+                fontSize: 9
             },
             margin: { top: 20 },
-            theme: 'grid', // Grid theme for the table
+            theme: 'grid',
             columnStyles: {
-                0: { cellWidth: 40 },  // Order Number
-                1: { cellWidth: 100 }, // Placed At
-                2: { cellWidth: 75 },  // Advisor Name
-                3: { cellWidth: 85 },  // Mobile Number
-                4: { cellWidth: 85 },  // Farmer Alt. Number
-                5: { cellWidth: 75 },  // Farmer Name
-                6: { cellWidth: 60 },  // Village
-                7: { cellWidth: 60 },  // Taluka
-                8: { cellWidth: 60 },  // District
-                9: { cellWidth: 60 },  // Pincode
-                10: { cellWidth: 80 }, // Nearby Location
-                11: { cellWidth: 80 }, // Post Office
-                12: { cellWidth: 150 }, // Product Names
-                13: { cellWidth: 50 },  // Total Quantity
-                14: { cellWidth: 70 },  // Final Amount
-                15: { cellWidth: 70 },  // Discount Amount
-                16: { cellWidth: 70 },  // Total Amount
-                17: { cellWidth: 70 }   // Order Status
+                0: { cellWidth: 40 },
+                1: { cellWidth: 100 },
+                2: { cellWidth: 75 },
+                3: { cellWidth: 85 },
+                4: { cellWidth: 85 },
+                5: { cellWidth: 75 },
+                6: { cellWidth: 60 },
+                7: { cellWidth: 60 },
+                8: { cellWidth: 60 },
+                9: { cellWidth: 60 },
+                10: { cellWidth: 80 },
+                11: { cellWidth: 80 },
+                12: { cellWidth: 150 },
+                13: { cellWidth: 50 },
+                14: { cellWidth: 70 },
+                15: { cellWidth: 70 },
+                16: { cellWidth: 70 },
+                17: { cellWidth: 70 }
             },
-            cellWidth: 'auto', 
-            overflow: 'linebreak', // Allow text wrapping for long content
+            cellWidth: 'auto',
+            overflow: 'linebreak',
         });
-    
-        // Add a title at the top of the PDF
+
         pdfDoc.setFontSize(18);
-        pdfDoc.text("Order List", 20, 30); // Positioning the title
+        pdfDoc.text("Order List", 20, 30);
         
         pdfDoc.save('AllOrders.pdf');
     };
@@ -381,114 +405,112 @@ const OperationalAdminSeeOrders = () => {
                     </Box>
                 )}
 
-<TableStyledContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-    <div ref={headerRef}>
-        <Table sx={{ minWidth: 2000, tableLayout: 'fixed', borderCollapse: 'collapse' }} aria-label="simple table">
-            <TableHead>
-                <TableRow>
-                    {[
-                        "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
-                        "Farmer Alt. Number", "Farmer Name", "Village", "Taluka", 
-                        "District", "Pincode", "Nearby Location", "Post Office",
-                        "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
-                        "Order Status"
-                    ].map((header) => (
-                        <StyledTableCellHeader key={header}>
-                            {header}
-                        </StyledTableCellHeader>
-                    ))}
-                </TableRow>
-            </TableHead>
-            <TableBody>
-                {selectedDateOrders.length === 0 ? (
-                    <TableRow>
-                        <StyledTableCellBody colSpan={18} align="center" sx={{ padding: '20px', border: '1px solid #e0e0e0' }}>
-                            No {filterStatus || 'orders'} found
-                        </StyledTableCellBody>
-                    </TableRow>
-                ) : (
-                    selectedDateOrders.map(order => {
-                        // Calculate Total Amount based on products
-                        const totalAmount = order.products.reduce((acc, product) => 
-                            acc + (product.productId?.price || 0) * product.quantity, 0
-                        );
+                <TableStyledContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                    <div ref={headerRef}>
+                        <Table sx={{ minWidth: 2000, tableLayout: 'fixed', borderCollapse: 'collapse' }} aria-label="simple table">
+                            <TableHead>
+                                <TableRow>
+                                    {[
+                                        "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
+                                        "Farmer Alt. Number", "Farmer Name", "Village/Post", "Taluka", 
+                                        "District", "Pincode", "Nearby Location",
+                                        "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
+                                        "Order Status"
+                                    ].map((header) => (
+                                        <StyledTableCellHeader key={header}>
+                                            {header}
+                                        </StyledTableCellHeader>
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {filteredOrders.length === 0 ? (
+                                    <TableRow>
+                                        <StyledTableCellBody colSpan={18} align="center" sx={{ padding: '20px', border: '1px solid #e0e0e0' }}>
+                                            No {filterStatus || 'orders'} found
+                                        </StyledTableCellBody>
+                                    </TableRow>
+                                ) : (
+                                    filteredOrders.map(order => {
+                                        const totalAmount = order.products.reduce((acc, product) => 
+                                            acc + (product.productId?.price || 0) * product.quantity, 0
+                                        );
 
-                        const finalAmount = totalAmount - (order.discount || 0);
+                                        const finalAmount = totalAmount - (order.discount || 0);
 
-                        return (
-                            <StyledTableRow key={order._id} hover>
-                                <StyledTableCellBody>
-                                    {order._id?.substring(0, 10)}...
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {new Date(order.createdAt).toLocaleString()}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.advisorId?.name || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.mobileNumber || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.alternativeNumber || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.name || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.village || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.taluka || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.district || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.pincode || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.nearbyLocation || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.customerId?.postOffice || 'N/A'}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.products?.map(product => product.productId?.name || 'N/A').join(', ')}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.products?.reduce((acc, product) => acc + product.quantity, 0) || 0}
-                                </StyledTableCellBody>
-                                {/* Total Amount now reflects the calculation based on the product price and quantity */}
-                                <StyledTableCellBody>
-                                    {totalAmount.toFixed(2)}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    {order.discount || 0}
-                                </StyledTableCellBody>
-                                {/* Final Amount now reflects the calculated final amount */}
-                                <StyledTableCellBody>
-                                    {finalAmount.toFixed(2)}
-                                </StyledTableCellBody>
-                                <StyledTableCellBody>
-                                    <Select
-                                        value={order.orderStatus || ''}
-                                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                        displayEmpty
-                                    >
-                                        <MenuItem value="Pending">Pending</MenuItem>
-                                        <MenuItem value="Confirm">Confirm</MenuItem>
-                                        <MenuItem value="Cancel">Cancel</MenuItem>
-                                    </Select>
-                                </StyledTableCellBody>
-                            </StyledTableRow>
-                        );
-                    })
-                )}
-            </TableBody>
-        </Table>
-    </div>
-</TableStyledContainer>
+                                        return (
+                                            <StyledTableRow key={order._id} hover>
+                                                <StyledTableCellBody>
+                                                    {order._id?.substring(0, 10)}...
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {new Date(order.createdAt).toLocaleString()}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.advisorId?.name || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.mobileNumber || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.alternativeNumber || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.name || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.village || 'N/A'}  ,  
+                                                    {order.customerId?.postOffice || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.taluka || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.district || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.pincode || 'N/A'}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.customerId?.nearbyLocation || 'N/A'}
+                                                </StyledTableCellBody>
+                                                {/* <StyledTableCellBody>
+                                                    {order.customerId?.postOffice || 'N/A'}
+                                                </StyledTableCellBody> */}
+                                                <StyledTableCellBody>
+                                                    {order.products?.map(product => product.productId?.name || 'N/A').join(', ')}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.products?.reduce((acc, product) => acc + product.quantity, 0) || 0}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {totalAmount.toFixed(2)}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {order.discount || 0}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    {finalAmount.toFixed(2)}
+                                                </StyledTableCellBody>
+                                                <StyledTableCellBody>
+                                                    <Select
+                                                        value={order.orderStatus || ''}
+                                                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                                        displayEmpty
+                                                    >
+                                                        <MenuItem value="Pending">Pending</MenuItem>
+                                                        <MenuItem value="Confirm">Confirm</MenuItem>
+                                                        <MenuItem value="Cancel">Cancel</MenuItem>
+                                                    </Select>
+                                                </StyledTableCellBody>
+                                            </StyledTableRow>
+                                        );
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </TableStyledContainer>
             </Box>
         </Sidebar>
     );

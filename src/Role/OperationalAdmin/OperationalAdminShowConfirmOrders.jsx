@@ -110,12 +110,12 @@ const OperationalAdminShowConfirmOrders = () => {
             'Mobile Number': order.customerId?.mobileNumber || 'N/A',
             'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
             'Farmer Name': order.customerId?.name || 'N/A',
-            'Village': order.customerId?.village || 'N/A',
+            'Village/Post': `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
             'Taluka': order.customerId?.taluka || 'N/A',
             'District': order.customerId?.district || 'N/A',
             'Pincode': order.customerId?.pincode || 'N/A',
             'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-            'Post Office': order.customerId?.postOffice || 'N/A',
+            // 'Post Office': order.customerId?.postOffice || 'N/A',
             'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
             'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
             'Final Amount': order.totalAmount,
@@ -137,12 +137,12 @@ const OperationalAdminShowConfirmOrders = () => {
         'Mobile Number': order.customerId?.mobileNumber || 'N/A',
         'Farmer Alt. Number': order.customerId?.alternativeNumber || 'N/A',
         'Farmer Name': order.customerId?.name || 'N/A',
-        'Village': order.customerId?.village || 'N/A',
+       'Village/Post': `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
         'Taluka': order.customerId?.taluka || 'N/A',
         'District': order.customerId?.district || 'N/A',
         'Pincode': order.customerId?.pincode || 'N/A',
         'Nearby Location': order.customerId?.nearbyLocation || 'N/A',
-        'Post Office': order.customerId?.postOffice || 'N/A',
+        // 'Post Office': order.customerId?.postOffice || 'N/A',
         'Product Names': order.products.map(product => product.productId?.name || 'N/A').join(', '),
         'Total Quantity': order.products.reduce((acc, product) => acc + product.quantity, 0),
         'Final Amount': order.totalAmount,
@@ -165,12 +165,12 @@ const OperationalAdminShowConfirmOrders = () => {
             order.customerId?.mobileNumber || 'N/A',
             order.customerId?.alternativeNumber || 'N/A',
             order.customerId?.name || 'N/A',
-            order.customerId?.village || 'N/A',
+            `${order.customerId?.village || 'N/A'} / ${order.customerId?.postOffice || 'N/A'}`,
             order.customerId?.taluka || 'N/A',
             order.customerId?.district || 'N/A',
             order.customerId?.pincode || 'N/A',
             order.customerId?.nearbyLocation || 'N/A',
-            order.customerId?.postOffice || 'N/A',
+            // order.customerId?.postOffice || 'N/A',
             order.products.map(product => product.productId?.name || 'N/A').join(', '),
             order.products.reduce((acc, product) => acc + product.quantity, 0),
             order.totalAmount,
@@ -178,9 +178,11 @@ const OperationalAdminShowConfirmOrders = () => {
         ]);
 
         doc.autoTable({
-            head: [['Order Number', 'Created At', 'Advisor Name', 'Mobile Number', 'Farmer Alt. Number',
-                    'Farmer Name', 'Village', 'Taluka', 'District', 'Pincode',
-                    'Nearby Location', 'Post Office', 'Product Names', 'Total Quantity', 'Final Amount', 'Order Status']],
+            head: [[ "Order Number", "Placed At", "Advisor Name", "Mobile Number", 
+                "Farmer Alt. Number", "Farmer Name", "Village/Post", "Taluka", 
+                "District", "Pincode", "Nearby Location",
+                "Product Names", "Total Quantity", "Total Amount", "Discount Amount", "Final Amount", 
+                "Order Status"]],
             body: rows,
             margin: { top: 20, left: 20, right: 20, bottom: 20 },
         });
@@ -297,12 +299,12 @@ const OperationalAdminShowConfirmOrders = () => {
                                     <StyledTableCellHeader>Mobile Number</StyledTableCellHeader>
                                     <StyledTableCellHeader>Farmer Alt. Number</StyledTableCellHeader>
                                     <StyledTableCellHeader>Farmer Name</StyledTableCellHeader>
-                                    <StyledTableCellHeader>Village</StyledTableCellHeader>
+                                    <StyledTableCellHeader>Village/Post</StyledTableCellHeader>
                                     <StyledTableCellHeader>Taluka</StyledTableCellHeader>
                                     <StyledTableCellHeader>District</StyledTableCellHeader>
                                     <StyledTableCellHeader>Pincode</StyledTableCellHeader>
                                     <StyledTableCellHeader>Nearby Location</StyledTableCellHeader>
-                                    <StyledTableCellHeader>Post Office</StyledTableCellHeader>
+                                    {/* <StyledTableCellHeader>Post Office</StyledTableCellHeader> */}
                                     <StyledTableCellHeader>Product Names</StyledTableCellHeader>
                                     <StyledTableCellHeader>Total Quantity</StyledTableCellHeader>
                                     <StyledTableCellHeader>Final Amount</StyledTableCellHeader>
@@ -319,12 +321,15 @@ const OperationalAdminShowConfirmOrders = () => {
                                             <StyledTableCellBody>{order.customerId?.mobileNumber || 'N/A'}</StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.alternativeNumber || 'N/A'}</StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.name || 'N/A'}</StyledTableCellBody>
-                                            <StyledTableCellBody>{order.customerId?.village || 'N/A'}</StyledTableCellBody>
+                                            <StyledTableCellBody>
+                                                    {order.customerId?.village || 'N/A'}  ,  
+                                                    {order.customerId?.postOffice || 'N/A'}
+                                                </StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.taluka || 'N/A'}</StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.district || 'N/A'}</StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.pincode || 'N/A'}</StyledTableCellBody>
                                             <StyledTableCellBody>{order.customerId?.nearbyLocation || 'N/A'}</StyledTableCellBody>
-                                            <StyledTableCellBody>{order.customerId?.postOffice || 'N/A'}</StyledTableCellBody>
+                                            {/* <StyledTableCellBody>{order.customerId?.postOffice || 'N/A'}</StyledTableCellBody> */}
                                             <StyledTableCellBody>
                                                 <ul style={{ padding: 0, margin: 0 }}>
                                                     {order.products.map((product) => (

@@ -15,20 +15,20 @@
 
     <style>
         body {
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* Internet Explorer/Edge */
-            user-select: none;         /* Non-prefixed version */
+            -webkit-user-select: auto; /* Allow text selection on Safari */
+            -moz-user-select: auto;    /* Allow text selection on Firefox */
+            -ms-user-select: auto;     /* Allow text selection on Internet Explorer/Edge */
+            user-select: auto;         /* Allow text selection for non-prefixed version */
         }
     </style>
 
     <script>
         // Disable right-click context menu
         document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent right-click menu
         });
 
-        // Disable specific keys related to developer tools and page source
+        // Disable specific keys related to developer tools and page source, but allow Ctrl+C and Ctrl+V
         document.addEventListener('keydown', function (e) {
             const isCtrlCmd = e.ctrlKey || e.metaKey; // Allow Mac users to use the Command key
 
